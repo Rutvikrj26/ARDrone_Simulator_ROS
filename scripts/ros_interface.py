@@ -141,7 +141,7 @@ class ROSControllerNode(object):
         if (((self.pos_class.desired_x - 0.10) < self.pos_class.current_trans_x < (self.pos_class.desired_x + 0.1)) and
             ((self.pos_class.desired_y - 0.1) < self.pos_class.current_trans_y < (self.pos_class.desired_y + 0.1)) and
             ((self.pos_class.desired_z - 0.05) < self.pos_class.current_trans_z < (self.pos_class.desired_z + 0.05)) and
-            ((self.pos_class.desired_yaw - 0.25) < self.pos_class.current_yaw < (self.pos_class.desired_yaw + 0.25))):
+            ((self.pos_class.desired_yaw - 0.20) < self.pos_class.current_yaw < (self.pos_class.desired_yaw + 0.20))):
             if self.current_point < num_points and self.nonunix_time >= 0.01:
                 self.current_point += 1
                 self.nonunix_time = 0

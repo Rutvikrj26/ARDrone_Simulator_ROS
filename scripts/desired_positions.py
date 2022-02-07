@@ -21,11 +21,6 @@ class ROSDesiredPositionGenerator(object):
 
         # Publisher
         self.pub_des_pos = rospy.Publisher('des_pos', String, queue_size=10)
-
-        # Subscriber
-#        self.sub_cen = rospy.Subscriber('/ardrone/center', String, self.ReceiveCenter)
-#        self.sub_linear = rospy.Subscriber('/ardrone/linear', String, self.ReceiveLinear)
-#        self.sub_circle = rospy.Subscriber('/ardrone/circle', String, self.ReceiveCircle)
         
         # Run the onboard controller at 200 Hz.
         self.onboard_loop_frequency = 200.
@@ -35,24 +30,6 @@ class ROSDesiredPositionGenerator(object):
         # Run this ROS node at the onboard loop frequency.
         self.run_pub_des_pos = rospy.Timer(rospy.Duration(1. / 
             self.onboard_loop_frequency), self.send_des_pos)
-
-        #---------------------------------------------------------------------
-        # Trajectory is set here.
-        #
-        # Each row is a point on the trajectory. Add more if needed.
-        # Each row follows the following format: 
-        #   [desired_x, desired_y. desired_z, desired_yaw]
-        #---------------------------------------------------------------------
-        
-        # Default trajectory, race starting point.
-        #self.desired_trajectory = np.array([[0, 0, 1.3, 0], 
-#                                            [0, 0, 1.3, 0], 
-#                                            [0, 0, 1.3, 0]])
-
-        #---------------------------------------------------------------------
-        # Default center position.
-        #---------------------------------------------------------------------
-        #self.center_position = self.desired_trajectory
 
         #---------------------------------------------------------------------
         # Linear trajectory setup.
@@ -107,43 +84,13 @@ class ROSDesiredPositionGenerator(object):
                                         angle_segment - np.pi]
 
 
-#        self.circular_trajectory[-1,:] = self.circular_trajectory[-1,:] - np.array([0, 0, 0, 0.02]);
-    #---------------------------------------------------------------------
-    # Set the desired trajectory for the relevant key pressed.
-    #---------------------------------------------------------------------
-
-    """     def ReceiveCenter(self, cen_msg):
-        # Sets trajectory to center position (0, 0, 1) when V 
-        # is pressed.
-        if cen_msg.data == "V":
-            self.desired_trajectory = self.center_position
-
-            # Finding size of array for debugging purposes.
-            self.M, self.N = self.desired_trajectory.shape
-
-    def ReceiveLinear(self, lin_msg):
-        # Sets trajectory to linear trajectory when N is pressed.
-        if lin_msg.data == "N":
-            self.desired_trajectory = self.linear_trajectory
-
-            # Finding size of array for debugging purposes.
-            self.M, self.N = self.desired_trajectory.shape
-
-    def ReceiveCircle(self, cir_msg):
-        # Sets trajectory to circular trajectory when M is pressed.
-        if cir_msg.data == "M":
-            self.desired_trajectory = self.circular_trajectory
-
-            # Finding size of array for debugging purposes.
-            self.M, self.N = self.desired_trajectory.shape """
-
     #---------------------------------------------------------------------
 
     def send_des_pos(self, event):
         """Publish the entire trajectory as a 1D string using the existing String msg type."""
         
         # Creating a 1D flattened array of desired_trajectory.
-        msg_array = self.linear_trajectory.flatten()
+        msg_array = self.circular_trajectory.flatten()
 
         # Converting the 1D msg array to a string and getting rid of brackets. 
         self.msg_string = ' '.join(map(str, msg_array))

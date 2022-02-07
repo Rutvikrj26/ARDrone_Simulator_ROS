@@ -77,7 +77,7 @@ class PositionController(object):
         g = 9.8                            # Acceleration due to gravity
         # damping_rt_x = 0.7                    # Damping ratio
         # damping_rt_y = 0.7
-        rise_time_z = 1
+        rise_time_z = 1.8
         rise_time_yaw = 2.5
 
         x_now = self.current_trans_x
@@ -101,15 +101,16 @@ class PositionController(object):
         pitch_angle = euler[1]
         yaw_angle = euler[2]
 
+        print("old/cur yaw: {0} {1}".format(self.yaw_old, yaw_angle))
+
         if (not np.sign(yaw_angle) == np.sign(self.yaw_old) and 
-            np.abs(np.abs(yaw_angle) - np.pi) < 0.05):
+            np.abs(np.abs(yaw_angle) - np.pi) < 0.5):
             # Add or subtract 2 pi depending on crossing direction
             yaw_angle = yaw_angle + np.sign(yaw_angle) * 2 * np.pi 
 
         self.current_yaw = yaw_angle
 
         f = (climb_accel + g) / (math.cos(roll_angle) * math.cos(pitch_angle))
-        # f = (0 + g) / (math.cos(roll_angle) * math.cos(pitch_angle))
 
         self.z_old = z_now
         self.climb_rate_old = climb_rate_now
@@ -120,8 +121,6 @@ class PositionController(object):
         x_rate_now = (x_now - self.x_old) / dt
         y_rate_now = (y_now - self.y_old) / dt
 
-       # print("act x/y rate: {0} {1}".format(x_rate_now, y_rate_now)) #, climb_rate_now))
-
         desired_x_rate = (self.desired_x - self.x_desired_old)/dt
         desired_y_rate = (self.desired_y - self.y_desired_old)/dt
         # desired_z_rate = 0
@@ -129,21 +128,18 @@ class PositionController(object):
         #print("des x/y rate: {0} {1}".format(desired_x_rate, desired_y_rate))
         #print("des x/y rate: {0} {1}".format(desired_x_rate, desired_y_rate))
 
-        damping_rt_x = 1.8
-        damping_rt_y = 1.8
-        
+        damping_rt_x = 1.5
+        damping_rt_y = 1.5
+
         w_n_x = 0.92
         w_n_y = 0.92
 
         x_accel = 2.0*damping_rt_x*w_n_x*(desired_x_rate - x_rate_now) + math.pow(w_n_x, 2)*(self.desired_x - x_now)
         y_accel = 2.0*damping_rt_y*w_n_y*(desired_y_rate - y_rate_now) + math.pow(w_n_y, 2)*(self.desired_y - y_now)
 
-        # print("x/y accel: {0} {1}".format(x_accel, y_accel))
-#        print("x/y/z des: {0} {1} {2}".format(self.desired_x, self.desired_y, self.desired_z))
-#        print("x/y/z now: {0} {1} {2}".format(x_now, y_now, z_now))
-
         self.x_old = x_now
         self.y_old = y_now
+        self.yaw_old = self.current_yaw
         self.x_desired_old = self.desired_x
         self.y_desired_old = self.desired_y
 
@@ -185,16 +181,6 @@ class PositionController(object):
         if climb_rate_command >= 2:
             climb_rate_command = 2
 
-        # Ensuring the yaw angles are in the respective quadrant.
-        """ for i in range(0, 1):
-            if ((355*(np.pi/180)) <= self.desired_yaw <= (5*(np.pi/180))):
-                break
-            elif (yaw_angle < 0) and ((6*(np.pi/180)) <= self.desired_yaw <= (354*(np.pi/180))):
-                yaw_angle = yaw_angle + (2*np.pi)
-                break
-            else:
-                pass """
-
         yaw_rate_command = (1/tau_yaw)*(self.desired_yaw - yaw_angle)
 
         # Updating the desired pose error.
@@ -209,9 +195,3 @@ class PositionController(object):
         print("x/y/z/yaw des: {0} {1} {2} {3}".format(self.desired_x, self.desired_y, self.desired_z, self.desired_yaw))
         print("x/y/z/yaw now: {0} {1} {2} {3}".format(x_now, y_now, z_now, yaw_angle))
         return controlled_data
-        
-
-
-
-
-
