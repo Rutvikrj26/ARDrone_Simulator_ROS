@@ -1,0 +1,12 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/aer1217/aer1217/labs/devel/lib/python2.7/dist-packages",
+        "/home/aer1217/aer1217/extras/devel/lib/python2.7/dist-packages",
+        "/opt/ros/kinetic/lib/python2.7/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/aer1217/aer1217/labs/devel/lib/python2.7/dist-packages",
+        "/home/aer1217/aer1217/extras/devel/lib/python2.7/dist-packages",
+        "/opt/ros/kinetic/lib/python2.7/dist-packages"
+    ]
+}

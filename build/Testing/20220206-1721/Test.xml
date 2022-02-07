@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Site BuildName="(empty)"
+	BuildStamp="20220206-1721-Experimental"
+	Name="Beyonder"
+	Generator="ctest-3.5.1"
+	CompilerName="/usr/bin/x86_64-linux-gnu-g++-5"
+	CompilerVersion="5.4.0"
+	OSName="Linux"
+	Hostname="Beyonder"
+	OSRelease="5.10.60.1-microsoft-standard-WSL2"
+	OSVersion="#1 SMP Wed Aug 25 23:20:18 UTC 2021"
+	OSPlatform="x86_64"
+	Is64Bits="1"
+	VendorString="GenuineIntel"
+	VendorID="Intel Corporation"
+	FamilyID="6"
+	ModelID="140"
+	ProcessorCacheSize="8192"
+	NumberOfLogicalCPU="8"
+	NumberOfPhysicalCPU="1"
+	TotalVirtualMemory="2048"
+	TotalPhysicalMemory="5836"
+	LogicalProcessorsPerPhysical="8"
+	ProcessorClockFrequency="2419.2"
+	>
+	<Testing>
+		<StartDateTime>Feb 06 12:21 EST</StartDateTime>
+		<StartTestTime>1644168112</StartTestTime>
+		<TestList/>
+		<EndDateTime>Feb 06 12:21 EST</EndDateTime>
+		<EndTestTime>1644168112</EndTestTime>
+		<ElapsedMinutes>0</ElapsedMinutes>
+	</Testing>
+</Site>

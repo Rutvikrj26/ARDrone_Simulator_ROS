@@ -1,0 +1,157 @@
+#!/usr/bin/env python2
+
+"""ROS Node for publishing desired positions."""
+
+from __future__ import division, print_function, absolute_import
+
+# Import ROS libraries
+import roslib
+import rospy
+import numpy as np
+from std_msgs.msg import String
+
+# Import class that computes the desired positions
+# from aer1217_ardrone_simulator import PositionGenerator
+
+class ROSDesiredPositionGenerator(object):
+
+    def __init__(self):
+
+        """Initialize the ROSDesiredPositionGenerator class."""
+
+        # Publisher
+        self.pub_des_pos = rospy.Publisher('des_pos', String, queue_size=10)
+
+        # Subscriber
+#        self.sub_cen = rospy.Subscriber('/ardrone/center', String, self.ReceiveCenter)
+#        self.sub_linear = rospy.Subscriber('/ardrone/linear', String, self.ReceiveLinear)
+#        self.sub_circle = rospy.Subscriber('/ardrone/circle', String, self.ReceiveCircle)
+        
+        # Run the onboard controller at 200 Hz.
+        self.onboard_loop_frequency = 200.
+
+        self.current_point = 1
+        
+        # Run this ROS node at the onboard loop frequency.
+        self.run_pub_des_pos = rospy.Timer(rospy.Duration(1. / 
+            self.onboard_loop_frequency), self.send_des_pos)
+
+        #---------------------------------------------------------------------
+        # Trajectory is set here.
+        #
+        # Each row is a point on the trajectory. Add more if needed.
+        # Each row follows the following format: 
+        #   [desired_x, desired_y. desired_z, desired_yaw]
+        #---------------------------------------------------------------------
+        
+        # Default trajectory, race starting point.
+        #self.desired_trajectory = np.array([[0, 0, 1.3, 0], 
+#                                            [0, 0, 1.3, 0], 
+#                                            [0, 0, 1.3, 0]])
+
+        #---------------------------------------------------------------------
+        # Default center position.
+        #---------------------------------------------------------------------
+        #self.center_position = self.desired_trajectory
+
+        #---------------------------------------------------------------------
+        # Linear trajectory setup.
+        #---------------------------------------------------------------------
+        linear_start = np.array([[-1.5, -1.5, 1, 0]])
+        linear_end = np.array([[1.5, 1.5, 2, 0]])
+
+        # Number of intermediate points (one way).
+        linear_intpoints = 20
+
+        # Placeholder for intermediate points.
+        linear_midpoints = np.ones((linear_intpoints, 4))
+
+        # Calculate each intermediate point required (one way).
+        for i in range(1, linear_intpoints+1):
+            linear_midpoints[i-1,:] = linear_start + (i/(linear_intpoints+1))*((linear_end) - (linear_start))
+
+        # Concatenating the trajectory together. 
+        # Flipping the intermediate points for reverse direction.
+
+        self.linear_trajectory = np.concatenate((linear_start, 
+                                            linear_midpoints, 
+                                            linear_end, 
+                                            np.flipud(linear_midpoints), 
+                                            linear_start), axis = 0)
+
+
+        #---------------------------------------------------------------------
+        # Setting up circular trajectory.
+        #---------------------------------------------------------------------
+        circular_origin = np.array([[0, 0,0.5, -np.pi]])
+        circular_height = 1  
+        circular_radius = 1.5
+
+        # Number of circular waypoints points. # Please keep this number even.
+        circular_waypoints = 60
+
+        # Placeholder for circular trajectory points.
+        self.circular_trajectory = np.ones((circular_waypoints+1, 4))
+
+        # Calculate each circular height points.
+        circular_height_pts_half = np.linspace(circular_origin[0,2], circular_origin[0,2] + circular_height*(1 - 1/circular_waypoints), circular_waypoints/2)
+        circular_height_pts_other_half = np.linspace(circular_origin[0,2] + circular_height, circular_origin[0,2], 1 + 0.5*circular_waypoints)
+        circular_height_pts = np.concatenate((circular_height_pts_half, circular_height_pts_other_half), axis = 0)
+        print(np.size(circular_height_pts))
+        # Calculate each circular trajectory point required (one cycle).
+        for i in range(circular_waypoints +1):
+            angle_segment = i*((2*np.pi)/circular_waypoints)
+            self.circular_trajectory[i,:] = [circular_origin[0,0] + circular_radius*np.cos(angle_segment), 
+                                        circular_origin[0,1] + circular_radius*np.sin(angle_segment), 
+                                        circular_height_pts[i],
+                                        angle_segment - np.pi]
+
+
+#        self.circular_trajectory[-1,:] = self.circular_trajectory[-1,:] - np.array([0, 0, 0, 0.02]);
+    #---------------------------------------------------------------------
+    # Set the desired trajectory for the relevant key pressed.
+    #---------------------------------------------------------------------
+
+    """     def ReceiveCenter(self, cen_msg):
+        # Sets trajectory to center position (0, 0, 1) when V 
+        # is pressed.
+        if cen_msg.data == "V":
+            self.desired_trajectory = self.center_position
+
+            # Finding size of array for debugging purposes.
+            self.M, self.N = self.desired_trajectory.shape
+
+    def ReceiveLinear(self, lin_msg):
+        # Sets trajectory to linear trajectory when N is pressed.
+        if lin_msg.data == "N":
+            self.desired_trajectory = self.linear_trajectory
+
+            # Finding size of array for debugging purposes.
+            self.M, self.N = self.desired_trajectory.shape
+
+    def ReceiveCircle(self, cir_msg):
+        # Sets trajectory to circular trajectory when M is pressed.
+        if cir_msg.data == "M":
+            self.desired_trajectory = self.circular_trajectory
+
+            # Finding size of array for debugging purposes.
+            self.M, self.N = self.desired_trajectory.shape """
+
+    #---------------------------------------------------------------------
+
+    def send_des_pos(self, event):
+        """Publish the entire trajectory as a 1D string using the existing String msg type."""
+        
+        # Creating a 1D flattened array of desired_trajectory.
+        msg_array = self.linear_trajectory.flatten()
+
+        # Converting the 1D msg array to a string and getting rid of brackets. 
+        self.msg_string = ' '.join(map(str, msg_array))
+
+        # Publishing the desired trajectory msg to des_pos.
+        self.pub_des_pos.publish(self.msg_string)
+
+if __name__ == '__main__':
+    rospy.init_node('desired_position')
+    ROSDesiredPositionGenerator()
+    rospy.spin()
