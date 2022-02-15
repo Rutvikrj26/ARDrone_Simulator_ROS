@@ -52,12 +52,6 @@ class PositionController(object):
         self.y_desired_old = 0.
         self.z_desired_old = 0.
 
-        self.desired_x_err = 1.
-        self.desired_y_err = 1.
-        self.desired_z_err = 1.
-        self.desired_yaw_err = 1.
-
-
     def update_position_controller(self, dt):
         """Postion Controller.
         
@@ -75,21 +69,19 @@ class PositionController(object):
         """
         
         g = 9.8                            # Acceleration due to gravity
-        # damping_rt_x = 0.7                    # Damping ratio
-        # damping_rt_y = 0.7
-        rise_time_z = 1.8
-        rise_time_yaw = 2.5
+        rise_time_z = 1
+        rise_time_yaw = 1.85
 
         x_now = self.current_trans_x
         y_now = self.current_trans_y
         z_now = self.current_trans_z
 
-        #---------------------------------------------------------------------
-        # Step 1: Calculating current the mass-normalized thrust.
-        #---------------------------------------------------------------------
-        
+        # Calculating the Climb rate based on the amount of error in the Z-Position
+
         climb_rate_now = (z_now - self.z_old) / dt
         climb_accel = (climb_rate_now - self.climb_rate_old) / dt
+
+        # Converting from Quaternion to Euler Angles 
 
         quaternion = np.array([self.current_rot_x,
                               self.current_rot_y,
@@ -101,7 +93,7 @@ class PositionController(object):
         pitch_angle = euler[1]
         yaw_angle = euler[2]
 
-        print("old/cur yaw: {0} {1}".format(self.yaw_old, yaw_angle))
+        # Adding Warp Correction to the Yaw Angle
 
         if (not np.sign(yaw_angle) == np.sign(self.yaw_old) and 
             np.abs(np.abs(yaw_angle) - np.pi) < 0.5):
@@ -115,21 +107,18 @@ class PositionController(object):
         self.z_old = z_now
         self.climb_rate_old = climb_rate_now
 
-        #---------------------------------------------------------------------
-        # Step 2: Determining the desired x/y accelerations.
-        #---------------------------------------------------------------------
+        # Step 2: Determining the desired x & y Accelerations
+
         x_rate_now = (x_now - self.x_old) / dt
         y_rate_now = (y_now - self.y_old) / dt
 
         desired_x_rate = (self.desired_x - self.x_desired_old)/dt
         desired_y_rate = (self.desired_y - self.y_desired_old)/dt
-        # desired_z_rate = 0
 
-        #print("des x/y rate: {0} {1}".format(desired_x_rate, desired_y_rate))
-        #print("des x/y rate: {0} {1}".format(desired_x_rate, desired_y_rate))
+        # Declaring the Control parameters, Damping Ratio and Natural Frequency
 
-        damping_rt_x = 1.5
-        damping_rt_y = 1.5
+        damping_rt_x = 1
+        damping_rt_y = 1
 
         w_n_x = 0.92
         w_n_y = 0.92
@@ -143,10 +132,11 @@ class PositionController(object):
         self.x_desired_old = self.desired_x
         self.y_desired_old = self.desired_y
 
-        #---------------------------------------------------------------------
-        # Step 3: Calculating commanded roll and pitch.
-        #---------------------------------------------------------------------
+        # Step 3: Calculating commanded roll and pitch angles based on the desired x & y accelerations
+
         roll_command_rt = -y_accel / f
+
+        ## Added a saturation function to the roll & Pitch command
 
         if roll_command_rt >= 1.:
             roll_command_rt = 1.
@@ -164,34 +154,41 @@ class PositionController(object):
         
         pitch_command = math.asin(pitch_command_rt)
 
+        # Considering the impact of Yaw on the Pitch and Roll Commands
+
         if yaw_angle >= 0 or yaw_angle <= 0:
             roll_command_B = (roll_command*math.cos(yaw_angle)) + (pitch_command*math.sin(yaw_angle))
             pitch_command_B = (-roll_command*math.sin(yaw_angle)) + (pitch_command*math.cos(yaw_angle))
             roll_command = roll_command_B
             pitch_command = pitch_command_B
         
-        #---------------------------------------------------------------------
         # Step 4: Calculating commanded climb and yaw rates.
-        #---------------------------------------------------------------------
+
         tau_z = rise_time_z/2.2
         tau_yaw = rise_time_yaw/2.2
         
         climb_rate_command = (1/tau_z)*(self.desired_z - self.current_trans_z)
 
-        if climb_rate_command >= 2:
-            climb_rate_command = 2
+        ## Adding Saturation to Climb Rate & Yaw Rate Command
+
+        if climb_rate_command >= 1:
+            climb_rate_command = 1
+        if climb_rate_command <= -1:
+            climb_rate_command = -1
 
         yaw_rate_command = (1/tau_yaw)*(self.desired_yaw - yaw_angle)
 
-        # Updating the desired pose error.
-        self.desired_x_err = np.absolute((np.absolute(x_now) - (self.desired_x + 0.5)) / (self.desired_x + 0.5))
-        self.desired_y_err = np.absolute((np.absolute(y_now) - (self.desired_y + 0.5)) / (self.desired_y + 0.5))
-        self.desired_z_err = np.absolute((z_now - (self.desired_z + 0.001)) / (self.desired_z + 0.001))
-        self.desired_yaw_err = np.absolute((yaw_angle - (self.desired_yaw + 0.01)) / (self.desired_yaw + 0.01))
-        
-        # Returning the commanded roll/pitch/yaw/climb
+        if yaw_rate_command >= 1.:
+            yaw_rate_command = 1.
+        if yaw_rate_command <= -1.:
+            yaw_rate_command = -1.        
+
+        # Defining errors for plotting
+        self.x_err = (self.current_trans_x - self.desired_x)
+        self.y_err = (self.current_trans_y - self.desired_y)
+        self.z_err = (self.current_trans_z - self.desired_z)
+        self.yaw_err = (self.current_yaw - self.desired_yaw)
+
         controlled_data = np.array([roll_command, pitch_command, yaw_rate_command, climb_rate_command])
 
-        print("x/y/z/yaw des: {0} {1} {2} {3}".format(self.desired_x, self.desired_y, self.desired_z, self.desired_yaw))
-        print("x/y/z/yaw now: {0} {1} {2} {3}".format(x_now, y_now, z_now, yaw_angle))
         return controlled_data

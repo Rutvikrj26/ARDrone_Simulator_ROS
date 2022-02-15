@@ -31,14 +31,14 @@ class ROSDesiredPositionGenerator(object):
         self.run_pub_des_pos = rospy.Timer(rospy.Duration(1. / 
             self.onboard_loop_frequency), self.send_des_pos)
 
-        #---------------------------------------------------------------------
+
         # Linear trajectory setup.
-        #---------------------------------------------------------------------
+
         linear_start = np.array([[-1.5, -1.5, 1, 0]])
         linear_end = np.array([[1.5, 1.5, 2, 0]])
 
-        # Number of intermediate points (one way).
-        linear_intpoints = 20
+        # Number of intermediate points
+        linear_intpoints = 6
 
         # Placeholder for intermediate points.
         linear_midpoints = np.ones((linear_intpoints, 4))
@@ -57,15 +57,14 @@ class ROSDesiredPositionGenerator(object):
                                             linear_start), axis = 0)
 
 
-        #---------------------------------------------------------------------
         # Setting up circular trajectory.
-        #---------------------------------------------------------------------
+
         circular_origin = np.array([[0, 0,0.5, -np.pi]])
         circular_height = 1  
         circular_radius = 1.5
 
         # Number of circular waypoints points. # Please keep this number even.
-        circular_waypoints = 60
+        circular_waypoints = 12
 
         # Placeholder for circular trajectory points.
         self.circular_trajectory = np.ones((circular_waypoints+1, 4))
@@ -75,6 +74,7 @@ class ROSDesiredPositionGenerator(object):
         circular_height_pts_other_half = np.linspace(circular_origin[0,2] + circular_height, circular_origin[0,2], 1 + 0.5*circular_waypoints)
         circular_height_pts = np.concatenate((circular_height_pts_half, circular_height_pts_other_half), axis = 0)
         print(np.size(circular_height_pts))
+
         # Calculate each circular trajectory point required (one cycle).
         for i in range(circular_waypoints +1):
             angle_segment = i*((2*np.pi)/circular_waypoints)
@@ -82,7 +82,6 @@ class ROSDesiredPositionGenerator(object):
                                         circular_origin[0,1] + circular_radius*np.sin(angle_segment), 
                                         circular_height_pts[i],
                                         angle_segment - np.pi]
-
 
     #---------------------------------------------------------------------
 
