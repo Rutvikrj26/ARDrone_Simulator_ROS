@@ -84,12 +84,77 @@ class ROSDesiredPositionGenerator(object):
                                         angle_segment - np.pi]
 
     #---------------------------------------------------------------------
+        """ZIGZAG TRAJECTORY"""  
+    #---------------------------------------------------------------------
+
+
+        # Setting up zigzag trajectory.
+        zigzag_intpoints = 6
+        scale_factor = 0.75;
+        zigzag_start = scale_factor*np.array([[-2, 2, 2, 0]])  
+        zigzag_end = scale_factor*np.array([[-2, -2, 2, 0]])
+        zigzag_waypoints_1 = np.ones((zigzag_intpoints, 4))
+        for i in range(1, zigzag_intpoints+1):
+            zigzag_waypoints_1[i-1, :] = zigzag_start + i*((zigzag_end) - (zigzag_start))/(zigzag_intpoints+1)
+
+        zigzag_start_2 = zigzag_end 
+        zigzag_end_2 = scale_factor*np.array([[-1, -2, 2, 0]])
+        zigzag_waypoints_2 = np.ones((zigzag_intpoints, 4))
+        for i in range(1, zigzag_intpoints+1):
+            zigzag_waypoints_2[i-1, :] = zigzag_start_2 + i*((zigzag_end_2) - (zigzag_start_2))/(zigzag_intpoints+1)
+
+        zigzag_start_3 = zigzag_end_2
+        zigzag_end_3 = scale_factor*np.array([[-1, 2, 2, 0]])
+        zigzag_waypoints_3 = np.ones((zigzag_intpoints, 4))
+        for i in range(1, zigzag_intpoints+1):
+            zigzag_waypoints_3[i-1, :] = zigzag_start_3 + i*((zigzag_end_3) - (zigzag_start_3))/(zigzag_intpoints+1)
+
+        zigzag_start_4 = zigzag_end_3 
+        zigzag_end_4 = scale_factor*np.array([[0, 2, 2, 0]])
+        zigzag_waypoints_4 = np.ones((zigzag_intpoints, 4))
+        for i in range(1, zigzag_intpoints+1):
+            zigzag_waypoints_4[i-1, :] = zigzag_start_4 + i*((zigzag_end_4) - (zigzag_start_4))/(zigzag_intpoints+1)
+
+        zigzag_start_5 = zigzag_end_4 
+        zigzag_end_5 = scale_factor*np.array([[0, -2, 2, 0]])
+        zigzag_waypoints_5 = np.ones((zigzag_intpoints, 4))
+        for i in range(1, zigzag_intpoints+1):
+            zigzag_waypoints_5[i-1, :] = zigzag_start_5 + i*((zigzag_end_5) - (zigzag_start_5))/(zigzag_intpoints+1)
+
+        zigzag_start_6 = zigzag_end_5 
+        zigzag_end_6 = scale_factor*np.array([[1, -2, 2, 0]])
+        zigzag_waypoints_6 = np.ones((zigzag_intpoints, 4))
+        for i in range(1, zigzag_intpoints+1):
+            zigzag_waypoints_6[i-1, :] = zigzag_start_6 + i*((zigzag_end_6) - (zigzag_start_6))/(zigzag_intpoints+1)
+
+        zigzag_start_7 = zigzag_end_6
+        zigzag_end_7 = scale_factor*np.array([[1, 2, 2, 0]])
+        zigzag_waypoints_7 = np.ones((zigzag_intpoints, 4))
+        for i in range(1, zigzag_intpoints+1):
+            zigzag_waypoints_7[i-1, :] = zigzag_start_7 + i*((zigzag_end_7) - (zigzag_start_7))/(zigzag_intpoints+1)
+
+        zigzag_start_8 = zigzag_end_7
+        zigzag_end_8 = scale_factor*np.array([[2, 2, 2, 0]])
+        zigzag_waypoints_8 = np.ones((zigzag_intpoints, 4))
+        for i in range(1, zigzag_intpoints+1):
+            zigzag_waypoints_8[i-1, :] = zigzag_start_8 + i*((zigzag_end_8) - (zigzag_start_8))/(zigzag_intpoints+1)
+
+        zigzag_start_9 = zigzag_end_8 
+        zigzag_end_9 = scale_factor*np.array([[2, -2, 2, 0]])
+        zigzag_waypoints_9 = np.ones((zigzag_intpoints, 4))
+        for i in range(1, zigzag_intpoints+1):
+            zigzag_waypoints_9[i-1, :] = zigzag_start_9 + i*((zigzag_end_9) - (zigzag_start_9))/(zigzag_intpoints+1)
+
+        self.zigzag_trajectory = np.concatenate((zigzag_start, zigzag_waypoints_1, zigzag_end, zigzag_start_2, zigzag_waypoints_2, zigzag_end_2, zigzag_start_3, zigzag_waypoints_3, 
+                           zigzag_end_3, zigzag_start_4, zigzag_waypoints_4, zigzag_end_4, zigzag_start_5, zigzag_waypoints_5, zigzag_end_5, zigzag_start_6, zigzag_waypoints_6, zigzag_end_6,
+                           zigzag_start_7, zigzag_waypoints_7, zigzag_end_7, zigzag_start_8, zigzag_waypoints_8, zigzag_end_8, zigzag_start_9, zigzag_waypoints_9, zigzag_end_9), axis = 0)
+
 
     def send_des_pos(self, event):
         """Publish the entire trajectory as a 1D string using the existing String msg type."""
         
         # Creating a 1D flattened array of desired_trajectory.
-        msg_array = self.circular_trajectory.flatten()
+        msg_array = self.zigzag_trajectory.flatten()
 
         # Converting the 1D msg array to a string and getting rid of brackets. 
         self.msg_string = ' '.join(map(str, msg_array))
