@@ -69,8 +69,8 @@ class PositionController(object):
         """
         
         g = 9.8                            # Acceleration due to gravity
-        rise_time_z = 1
-        rise_time_yaw = 1.85
+        rise_time_z = 0.15
+        rise_time_yaw = 0.3
 
         x_now = self.current_trans_x
         y_now = self.current_trans_y
@@ -120,8 +120,8 @@ class PositionController(object):
         damping_rt_x = 1
         damping_rt_y = 1
 
-        w_n_x = 0.92
-        w_n_y = 0.92
+        w_n_x = 1
+        w_n_y = 1
 
         x_accel = 2.0*damping_rt_x*w_n_x*(desired_x_rate - x_rate_now) + math.pow(w_n_x, 2)*(self.desired_x - x_now)
         y_accel = 2.0*damping_rt_y*w_n_y*(desired_y_rate - y_rate_now) + math.pow(w_n_y, 2)*(self.desired_y - y_now)
@@ -190,5 +190,7 @@ class PositionController(object):
         self.yaw_err = (self.current_yaw - self.desired_yaw)
 
         controlled_data = np.array([roll_command, pitch_command, yaw_rate_command, climb_rate_command])
+
+        print('curr x/y/yaw ' + str(self.current_trans_x) + ' ' + str(self.current_trans_y) + ' ' + str(self.current_yaw) + ' | ' + 'des x/y/yaw ' +  str(self.desired_x) + ' ' + str(self.desired_y) + ' ' + str(self.desired_yaw))
 
         return controlled_data
