@@ -137,5 +137,5 @@ def path_planner():
     for i in range(np.shape(path)[0]):
         path[i][3] = pose_total[i]+1.57
 
-
+    print(path)
     return path
